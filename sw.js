@@ -1,4 +1,4 @@
-const CACHE_NAME = 'griechisch-lernen-v1';
+const CACHE_NAME = 'griechisch-lernen-v2';
 const ASSETS = [
   './index.html',
   './manifest.json',
@@ -23,8 +23,23 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Only handle same-origin requests; let Google Fonts etc. go straight to network
-  if (event.request.url.startsWith(self.location.origin)) {
+  if (!event.request.url.startsWith(self.location.origin)) return;
+
+  const isPage = event.request.mode === 'navigate' ||
+    event.request.destination === 'document';
+
+  if (isPage) {
+    // Always try the network first for the app itself, so updates show up
+    // immediately. Only fall back to the cached version when offline.
+    event.respondWith(
+      fetch(event.request).then((response) => {
+        const clone = response.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        return response;
+      }).catch(() => caches.match(event.request))
+    );
+  } else {
+    // Icons, manifest etc. change rarely — cache-first is fine for those.
     event.respondWith(
       caches.match(event.request).then((cached) => {
         return cached || fetch(event.request).then((response) => {
