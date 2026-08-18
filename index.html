@@ -218,9 +218,9 @@
   .write-area {
     position: relative;
     width: 100%;
-    max-width: 210px;
+    max-width: 180px;
     aspect-ratio: 1 / 1;
-    margin: 0 auto 12px;
+    margin: 0 auto 10px;
   }
 
   .write-ghost {
@@ -231,7 +231,7 @@
     justify-content: center;
     gap: 0.1em;
     font-family: var(--display-font);
-    font-size: 5.4rem;
+    font-size: 4.6rem;
     line-height: 1;
     color: rgba(43,36,32,0.16);
     user-select: none;
@@ -293,8 +293,29 @@
   .write-canvas.result-close { border-color: var(--bronze); border-style: solid; }
 
   #writingCard {
-    padding: 26px 24px 22px;
+    padding: 24px 22px 20px;
     min-height: 0;
+  }
+
+  .write-controls-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+  .write-controls-row .theme-row,
+  .write-controls-row .toggle-row {
+    margin-bottom: 0;
+  }
+  .write-controls-row .toggle-row {
+    gap: 8px;
+  }
+  .write-shuffle-btn {
+    padding: 6px 10px;
+    margin-bottom: 0 !important;
   }
 
   .tab-btn {
@@ -631,19 +652,20 @@
 
   <!-- WRITING -->
   <div class="card hidden" id="writingCard">
-    <div class="theme-row" id="writeModeRow" style="margin-bottom:10px;">
-      <button class="theme-chip active" id="writeModeTrace">Nachfahren</button>
-      <button class="theme-chip" id="writeModeDictate">Diktat</button>
-    </div>
-    <div class="toggle-row" id="writeShuffleRow" style="margin-bottom:10px;">
-      <label class="toggle-switch">
-        <input type="checkbox" id="writeShuffleToggle">
-        <span class="toggle-slider"></span>
-      </label>
-      <label class="toggle-label" for="writeShuffleToggle">Zufällige Reihenfolge</label>
-      <button class="speak-btn" id="writeShuffleBtn" style="margin-left:auto; padding:6px 12px;" aria-label="Neu mischen">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h3.5c1 0 1.9.5 2.4 1.4L14 15c.5.9 1.4 1.4 2.4 1.4H20M4 17h3.5c1 0 1.9-.5 2.4-1.4l.4-.7M20 7h-3.6c-1 0-1.9.5-2.4 1.4l-.4.7"/><path d="M17.5 4.5L20 7l-2.5 2.5M17.5 19.5L20 17l-2.5-2.5"/></svg>
-      </button>
+    <div class="write-controls-row">
+      <div class="theme-row" id="writeModeRow">
+        <button class="theme-chip active" id="writeModeTrace">Nachfahren</button>
+        <button class="theme-chip" id="writeModeDictate">Diktat</button>
+      </div>
+      <div class="toggle-row" id="writeShuffleRow">
+        <label class="toggle-switch">
+          <input type="checkbox" id="writeShuffleToggle" aria-label="Zufällige Reihenfolge" title="Zufällige Reihenfolge">
+          <span class="toggle-slider"></span>
+        </label>
+        <button class="speak-btn write-shuffle-btn" id="writeShuffleBtn" aria-label="Zufällige Reihenfolge neu mischen">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h3.5c1 0 1.9.5 2.4 1.4L14 15c.5.9 1.4 1.4 2.4 1.4H20M4 17h3.5c1 0 1.9-.5 2.4-1.4l.4-.7M20 7h-3.6c-1 0-1.9.5-2.4 1.4l-.4.7"/><path d="M17.5 4.5L20 7l-2.5 2.5M17.5 19.5L20 17l-2.5-2.5"/></svg>
+        </button>
+      </div>
     </div>
     <div class="write-label" id="writeLabel">gamma</div>
     <div class="write-sub" id="writeSub">weiches „g“, vor e/i wie ein „j“</div>
