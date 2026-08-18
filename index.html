@@ -173,6 +173,62 @@
     text-align: center;
   }
 
+  .write-area {
+    position: relative;
+    width: 100%;
+    max-width: 260px;
+    aspect-ratio: 1 / 1;
+    margin: 0 auto 20px;
+  }
+
+  .write-ghost {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.1em;
+    font-family: var(--display-font);
+    font-size: 7rem;
+    line-height: 1;
+    color: rgba(43,36,32,0.16);
+    user-select: none;
+    pointer-events: none;
+  }
+
+  .write-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 1.5px dashed var(--parchment-shadow);
+    border-radius: 10px;
+    touch-action: none;
+    background: rgba(255,255,255,0.15);
+  }
+
+  .write-label {
+    font-size: 1.15rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    text-align: center;
+    margin-bottom: 4px;
+  }
+
+  .write-sub {
+    font-size: 0.95rem;
+    color: var(--patina-dim);
+    font-style: italic;
+    text-align: center;
+    margin-bottom: 18px;
+  }
+
+  .write-actions {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+
   .tab-btn {
     background: none;
     border: none;
@@ -408,6 +464,7 @@
     <button class="tab-btn active" id="catLetters">Buchstaben</button>
     <button class="tab-btn" id="catNumbers">Zahlen</button>
     <button class="tab-btn" id="catWords">Wortschatz</button>
+    <button class="tab-btn" id="catWriting">Schreiben</button>
   </div>
 
   <div class="tabs secondary">
@@ -505,6 +562,23 @@
     <div class="quiz-feedback" id="wordQuizFeedback"></div>
     <button class="quiz-continue hidden" id="wordQuizContinue">weiter</button>
     <div class="quiz-round" id="wordQuizRound">Runde 1</div>
+  </div>
+
+  <!-- WRITING -->
+  <div class="card hidden" id="writingCard">
+    <div class="write-label" id="writeLabel">gamma</div>
+    <div class="write-sub" id="writeSub">weiches „g“, vor e/i wie ein „j“</div>
+    <div class="write-area">
+      <div class="write-ghost" id="writeGhost">Α α</div>
+      <canvas class="write-canvas" id="writeCanvas"></canvas>
+    </div>
+    <div class="write-actions">
+      <button class="speak-btn" id="writeClearBtn">Löschen</button>
+      <button class="speak-btn" id="writeSpeakBtn" aria-label="Aussprache anhören">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 10v4h4l5 5V5L7 10H3z"/><path d="M16.5 12c0-1.77-1-3.29-2.5-4.03v8.06c1.5-.74 2.5-2.26 2.5-4.03z"/></svg>
+        Anhören
+      </button>
+    </div>
   </div>
 
   <!-- shared browse navigation -->
@@ -703,6 +777,7 @@ let mode = 'browse';      // 'browse' | 'quiz'
 const catLettersBtn = document.getElementById('catLetters');
 const catNumbersBtn = document.getElementById('catNumbers');
 const catWordsBtn = document.getElementById('catWords');
+const catWritingBtn = document.getElementById('catWriting');
 const modeBrowseBtn = document.getElementById('modeBrowse');
 const modeQuizBtn = document.getElementById('modeQuiz');
 
@@ -712,6 +787,7 @@ const numbersCard = document.getElementById('numbersCard');
 const numbersQuizCard = document.getElementById('numbersQuizCard');
 const wordsCard = document.getElementById('wordsCard');
 const wordsQuizCard = document.getElementById('wordsQuizCard');
+const writingCard = document.getElementById('writingCard');
 const browseControls = document.getElementById('browseControls');
 const footerNote = document.getElementById('footerNote');
 const positionEl = document.getElementById('position');
@@ -800,7 +876,9 @@ const footers = {
   numbersBrowse: 'Zahlen über 20 werden aus Zehnern und Einern zusammengesetzt — z. B. 34 = τριάντα τέσσερα.',
   numbersQuiz: 'Übe in deinem Tempo. Kein Punktestand, keine Zeit, kein Zwang — einfach weitermachen, solange es Spaß macht.',
   wordsBrowse: 'Wähle oben ein Thema. Blättere in deinem Tempo, ganz ohne Zwang.',
-  wordsQuiz: 'Übe in deinem Tempo, innerhalb des gewählten Themas. Kein Punktestand, kein Zwang.'
+  wordsQuiz: 'Übe in deinem Tempo, innerhalb des gewählten Themas. Kein Punktestand, kein Zwang.',
+  writingBrowse: 'Fahre den Buchstaben im Hintergrund mit dem Finger nach. Zeigt dir die Form, nicht die Strichreihenfolge.',
+  writingQuiz: 'Fahre den Buchstaben im Hintergrund mit dem Finger nach. Zeigt dir die Form, nicht die Strichreihenfolge.'
 };
 
 function updateView() {
@@ -810,18 +888,21 @@ function updateView() {
   numbersQuizCard.classList.add('hidden');
   wordsCard.classList.add('hidden');
   wordsQuizCard.classList.add('hidden');
+  writingCard.classList.add('hidden');
   browseControls.classList.add('hidden');
 
   catLettersBtn.classList.toggle('active', category === 'letters');
   catNumbersBtn.classList.toggle('active', category === 'numbers');
   catWordsBtn.classList.toggle('active', category === 'words');
+  catWritingBtn.classList.toggle('active', category === 'writing');
   modeBrowseBtn.classList.toggle('active', mode === 'browse');
   modeQuizBtn.classList.toggle('active', mode === 'quiz');
-  englishToggleRow.classList.toggle('hidden', category === 'letters');
+  englishToggleRow.classList.toggle('hidden', category === 'letters' || category === 'writing');
   themeRow.classList.toggle('hidden', category !== 'words');
+  modeBrowseBtn.parentElement.classList.toggle('hidden', category === 'writing');
 
   const key = category + (mode === 'browse' ? 'Browse' : 'Quiz');
-  footerNote.textContent = footers[key];
+  footerNote.textContent = footers[key] || footers.writingBrowse;
 
   if (category === 'letters' && mode === 'browse') {
     lettersCard.classList.remove('hidden');
@@ -844,12 +925,17 @@ function updateView() {
   } else if (category === 'words' && mode === 'quiz') {
     wordsQuizCard.classList.remove('hidden');
     newWordRound();
+  } else if (category === 'writing') {
+    writingCard.classList.remove('hidden');
+    browseControls.classList.remove('hidden');
+    renderWriting();
   }
 }
 
 catLettersBtn.addEventListener('click', () => { category = 'letters'; updateView(); });
 catNumbersBtn.addEventListener('click', () => { category = 'numbers'; updateView(); });
 catWordsBtn.addEventListener('click', () => { category = 'words'; updateView(); });
+catWritingBtn.addEventListener('click', () => { category = 'writing'; updateView(); });
 modeBrowseBtn.addEventListener('click', () => { mode = 'browse'; updateView(); });
 modeQuizBtn.addEventListener('click', () => { mode = 'quiz'; updateView(); });
 
@@ -977,9 +1063,12 @@ wordSpeakBtn.addEventListener('click', () => {
 
 // ---------------- SHARED browse navigation ----------------
 function go(delta) {
-  if (category === 'letters') {
+  if (category === 'letters' || category === 'writing') {
     const next = letterIdx + delta;
-    if (next >= 0 && next < letters.length) { letterIdx = next; renderLetter(); }
+    if (next >= 0 && next < letters.length) {
+      letterIdx = next;
+      if (category === 'letters') renderLetter(); else renderWriting();
+    }
   } else if (category === 'numbers') {
     const next = numberPos + delta;
     if (next >= 0 && next < numbersList.length) { numberPos = next; renderNumber(); }
@@ -1266,6 +1355,93 @@ function selectWordOption(btn, chosenIdx) {
 }
 
 wordQuizContinue.addEventListener('click', () => { wordRound += 1; newWordRound(); });
+
+// ---------------- WRITING ----------------
+const writeGhost = document.getElementById('writeGhost');
+const writeLabel = document.getElementById('writeLabel');
+const writeSub = document.getElementById('writeSub');
+const writeCanvas = document.getElementById('writeCanvas');
+const writeClearBtn = document.getElementById('writeClearBtn');
+const writeSpeakBtn = document.getElementById('writeSpeakBtn');
+const writeCtx = writeCanvas.getContext('2d');
+
+function resizeWriteCanvas() {
+  if (!writeCtx) return;
+  const rect = writeCanvas.getBoundingClientRect();
+  if (rect.width === 0 || rect.height === 0) return;
+  const ratio = window.devicePixelRatio || 1;
+  writeCanvas.width = rect.width * ratio;
+  writeCanvas.height = rect.height * ratio;
+  writeCtx.setTransform(1, 0, 0, 1, 0, 0);
+  writeCtx.scale(ratio, ratio);
+  writeCtx.lineCap = 'round';
+  writeCtx.lineJoin = 'round';
+  writeCtx.lineWidth = 7;
+  writeCtx.strokeStyle = '#2b2420';
+}
+
+function clearWriteCanvas() {
+  if (!writeCtx) return;
+  writeCtx.clearRect(0, 0, writeCanvas.width, writeCanvas.height);
+}
+
+function renderWriting() {
+  const l = letters[letterIdx];
+  writeGhost.textContent = `${l.upper} ${l.lower}`;
+  writeLabel.textContent = l.name;
+  writeSub.textContent = l.sound;
+  positionEl.textContent = `${letterIdx + 1} / ${letters.length}`;
+  prevBtn.disabled = letterIdx === 0;
+  nextBtn.disabled = letterIdx === letters.length - 1;
+  resizeWriteCanvas();
+  clearWriteCanvas();
+}
+
+let writeDrawing = false;
+let writeLastX = 0;
+let writeLastY = 0;
+
+function writePos(e) {
+  const rect = writeCanvas.getBoundingClientRect();
+  const point = e.touches && e.touches.length ? e.touches[0] : e;
+  return { x: point.clientX - rect.left, y: point.clientY - rect.top };
+}
+
+function writeStart(e) {
+  writeDrawing = true;
+  const p = writePos(e);
+  writeLastX = p.x;
+  writeLastY = p.y;
+  e.preventDefault();
+}
+
+function writeMove(e) {
+  if (!writeDrawing || !writeCtx) return;
+  const p = writePos(e);
+  writeCtx.beginPath();
+  writeCtx.moveTo(writeLastX, writeLastY);
+  writeCtx.lineTo(p.x, p.y);
+  writeCtx.stroke();
+  writeLastX = p.x;
+  writeLastY = p.y;
+  e.preventDefault();
+}
+
+function writeEnd() { writeDrawing = false; }
+
+writeCanvas.addEventListener('touchstart', writeStart, { passive: false });
+writeCanvas.addEventListener('touchmove', writeMove, { passive: false });
+writeCanvas.addEventListener('touchend', writeEnd);
+writeCanvas.addEventListener('mousedown', writeStart);
+writeCanvas.addEventListener('mousemove', writeMove);
+window.addEventListener('mouseup', writeEnd);
+window.addEventListener('resize', () => { if (category === 'writing') { resizeWriteCanvas(); clearWriteCanvas(); } });
+
+writeClearBtn.addEventListener('click', clearWriteCanvas);
+writeSpeakBtn.addEventListener('click', () => {
+  const l = letters[letterIdx];
+  speak(l.name);
+});
 
 // ---------------- INIT ----------------
 updateView();
